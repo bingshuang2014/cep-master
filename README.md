@@ -182,10 +182,12 @@ cd cep-master
 | `ShouCou-CPE.apk` | `79f83e4247d4604b167694d165a794ee2723a3212c7c375c47634f5016bfc62a` |
 | `shoucou-cpe-source.tar.gz` | `7e0c8df74ef1cde4044e2e5c3d81d98287baf07492da6e798eb4550150619907` |
 
-安装包在 Release 里按作者给的版本命名 **`手搓CPE_1.6.0.apk`**——它是 `ShouCou-CPE.apk`
-的逐字节副本（SHA-256 相同，未重新签名），APK 内 `versionName=1.6.0` / `versionCode=2`，
-`classes.dex` 带 D8 release 标记、AXML 无 `android:debuggable`，v1+v2+v3 签名有效
-（`MANIFEST.MF` 8 条摘要逐条复算通过）。`shoucou-cpe-source.tar.gz` 作为源码归档一并附上。
+安装包按作者给的版本号发布在 Release `v1.6.0`，显示名（label）为 **`手搓CPE_1.6.0.apk`**；
+GitHub 会把 asset 下载名里的 CJK 前缀剥掉，实际下载文件名为 `CPE_1.6.0.apk`，两者是同一个
+156358 字节文件。它是仓库里 `ShouCou-CPE.apk` 的逐字节副本（SHA-256 相同，未重新签名），
+APK 内 `versionName=1.6.0` / `versionCode=2`，`classes.dex` 带 D8 release 标记、AXML 无
+`android:debuggable`，v1+v2+v3 签名有效（`MANIFEST.MF` 8 条摘要逐条复算通过）。
+`shoucou-cpe-source.tar.gz` 作为源码归档一并附上。
 
 需要留意的安全弱点（属于本地面板的历史设计，不是后门；按影响排序）：
 
