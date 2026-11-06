@@ -38,8 +38,8 @@ const ref = (value) => ({ type: "ref", value });
 const manifest = {
   tag: "manifest",
   attrs: [
-    { name: "versionCode", value: int(2) },
-    { name: "versionName", value: str("1.6.0") },
+    { name: "versionCode", value: int(3) },
+    { name: "versionName", value: str("1.6.1") },
     { name: "package", value: str("com.dsh.cpepanel"), plain: true },
   ],
   children: [

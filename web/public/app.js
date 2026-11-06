@@ -1726,7 +1726,7 @@ document.addEventListener("click", async (e) => {
     if (!to || !body) { toast("请填写号码和内容"); return; }
     try {
       const dev = state.snap.ttyList[0];
-      const res = await shell("sms_tool -d " + dev + " send " + JSON.stringify(to) + " " + JSON.stringify(body) + " 2>&1");
+      const res = await shell("sms_tool -d " + shq(dev) + " send " + shq(to) + " " + shq(body) + " 2>&1");
       const out = (res.stdout || "").trim();
       toast(out ? out.slice(0, 60) : "短信已交给模组");
       state.sms.body = "";

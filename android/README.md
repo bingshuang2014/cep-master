@@ -56,3 +56,6 @@ export APKSIGNER_JAR=/data/data/com.termux/files/usr/share/java/apksigner.jar
   如果提高 targetSdk，需要加 networkSecurityConfig。
 - 每个 ubus 请求用 `Network.openConnection` 绑定 WiFi，避免手机默认走移动数据。
 - 5G 通信壳是 iframe，必须允许 mixed content。
+- 当前源码构建出的版本号是 **1.6.1**（`versionCode=3`）：仓库源码已修复 sms-send 命令注入，
+  已发布的 v1.6.0 成品仍是旧代码。需要短信发送功能请用本脚本自行构建，
+  详见[根目录 README「关于 1.6.1 与短信发送功能」](../README.md)。

@@ -8,7 +8,9 @@
 > - 原作者：酷安 **「大砖头没救了」**（没有 GitHub 账号）；由 [bingshuang2014](https://github.com/bingshuang2014) 代为发布源码与 APK。
 > - 仓库地址：<https://github.com/bingshuang2014/cep-master>
 > - 后续更新看情况，代发者不承诺维护节奏；功能建议、问题反馈以原作者的酷安动态为准。
-> - 代发只搬运源码与构建产物，未改动任何功能逻辑；发布前做过两轮独立源码审查，见「源码安全审查」。
+> - 代发只搬运源码与构建产物；发布前做过两轮独立源码审查，见「源码安全审查」。
+>   发布后仅针对 sms-send 命令注入做过一处修复，**已发布的 v1.6.0 APK 仍是原作者成品、未重新打包**，
+>   需要该受影响功能请自行构建 1.6.1，见「关于 1.6.1 与短信发送功能」。
 
 一个给 **OpenWrt / 5G CPE** 手搓的手机管理端：原生 Android 壳 + 同款网页版。
 深色 / 浅色 / 紫夜三主题，Liquid Glass（液态玻璃）卡片和悬浮底栏，DIY 壁纸，
@@ -155,13 +157,16 @@ cd cep-master
   AXML 与 `resources.arsc` 二进制构造、壁纸 `toDataURL`——
   这些是编码 / 压缩 / 签名，不是加密；也没有 `eval`、`atob`、base64 解码执行、动态加载、
   ≥120 字符的 base64 / hex 长字面量。
-- **产物与源码一致**：APK 内 `assets/app.js`、`index.html`、`style.css`、`icon.svg`
-  与仓库源码逐文件 SHA-256 相同，`res/mipmap/ic_launcher.png` 与 `docs/icon.png` 全同，
+- **产物与源码一致（审查当时）**：APK 内 `assets/app.js`、`index.html`、`style.css`、
+  `icon.svg` 与仓库源码逐文件 SHA-256 相同，`res/mipmap/ic_launcher.png` 与 `docs/icon.png` 全同，
   APK 共 11 个条目、无多余文件。`shoucou-cpe-source.tar.gz` 解出 20 个普通文件（无符号链接 /
   设备节点 / 绝对路径 / `..`），**补代发说明之前**与工作区源码逐文件 SHA-256 全同；
   补完说明后 17 个代码 / 脚本 / 图片仍逐字节一致，仅 3 份 README（根目录、`web/`、`android/`）
   与归档里的原版有纯文字差异（代发说明、仓库地址、Node 版本要求）——
-  **代码 / 脚本 / 图片零改动**，归档内保留 README 原版、未重新打包。
+  **发布时代码 / 脚本 / 图片零改动**，归档内保留 README 原版、未重新打包。
+  **发布后**仓库源码只改了 `web/public/app.js` 一行（修复 sms-send 命令注入，见下节），
+  因此当前仓库的 `app.js` 与 v1.6.0 APK 内的 `assets/app.js` / 归档里的原版**不再字节一致**；
+  这是审查结论之后的明确修复，其余 16 个代码 / 脚本 / 图片仍逐字节一致。
   4 张 `docs/*.png` 都是标准 PNG（CRC 全对、IEND 之后 0 字节追加、无非标准 chunk，
   IDAT 解压后无像素余量）；源码里没有零宽字符 / 隐形 Unicode 控制符，无 NTFS 附加流。
 - APK 签名：v1 + v2 + v3（`META-INF/CPE.SF` 带 `X-Android-APK-Signed: 2, 3`；
@@ -189,7 +194,37 @@ APK 内 `versionName=1.6.0` / `versionCode=2`，`classes.dex` 带 D8 release 标
 `android:debuggable`，v1+v2+v3 签名有效（`MANIFEST.MF` 8 条摘要逐条复算通过）。
 `shoucou-cpe-source.tar.gz` 作为源码归档一并附上。
 
-需要留意的安全弱点（属于本地面板的历史设计，不是后门；按影响排序）：
+## 关于 1.6.1 与短信发送功能
+
+**已发布的 v1.6.0 成品含一个命令注入弱点**：`web/public/app.js:1729` 的「发送短信」把号码和内容
+用 `JSON.stringify()` 拼进 `/bin/sh -c`，双引号挡不住 `$()` / 反引号的命令替换，输入会被路由器
+当成命令执行（详见下方「命令注入面」）。这个功能只在检测到 `/dev/ttyUSB*` AT 串口时才出现，
+而本 CPE 的 UNISOC 模组只暴露 RNDIS、没有 AT 串口（见「已知限制」），所以作者这台机器上
+该页显示「未检测到」、按钮不会渲染；但装了 USB 串口驱动或换 QMI/MBIM 后即可达。
+
+代发者已在**仓库源码**里修好这一行（改走现成的 `shq()` 单引号转义），并把构建版本号提到
+**1.6.1 / versionCode=3**（`android/make-apk.mjs:41-42`、`android/AndroidManifest.xml:4-5`）。
+
+> **Release 里的 `CPE_1.6.0.apk` 是原作者成品，未重新打包、未重新签名**（SHA-256 仍是
+> `79f83e42…c62a`），它内部仍是未修的旧 `app.js`。要**用短信发送功能**，请按下面的步骤
+> 自行构建 1.6.1，不要直接用 v1.6.0 的 APK。
+
+```sh
+cd android
+export ANDROID_JAR=$ANDROID_HOME/platforms/android-33/android.jar
+# Termux 上按实际路径设置 D8_JAR / APKSIGNER_JAR，见 android/README.md
+./build-apk.sh        # 输出 android/app/build/app-signed.apk（versionName=1.6.1）
+```
+
+构建需要 JDK、`android.jar`、`d8.jar`、`apksigner.jar` 和 Node 22+（见「Android APK」与
+`android/README.md`）。`build-apk.sh` 会用 `app/build/cpe.keystore` 重新签名，与发布证书不同，
+**覆盖安装前需先卸载 v1.6.0**。网页版不受影响：直接 `node web/server.mjs` 跑的就是已修的源码，
+无需构建，也无需 1.6.1 版本号。
+
+其余功能、校验值、审查结论均对应 v1.6.0 成品；`shoucou-cpe-source.tar.gz` 归档保留的也是
+发布时的原版源码（不含这处修复）。
+
+需要留意的安全弱点（属于本地面板的历史设计，不是后门；按影响排序；v1.6.0 成品适用）：
 
 **命令注入面（最值得修）**
 
@@ -197,7 +232,9 @@ APK 内 `versionName=1.6.0` / `versionCode=2`，`classes.dex` 带 D8 release 标
   `/bin/sh -c`：JSON.stringify 不转义 `$()` 与反引号，双引号里的命令替换照样被 shell 执行，
   构成**路由器侧命令注入**。实测 `sh -c 'printf %s "x$(id)"'` 输出 `xuid=197609(admin)...`。
   对照 `app.js:1702` crontab 用 `shq()`（L126-128 单引号转义正确）、`app.js:1627` watchcat 与
-  `app.js:1711` at-send 用白名单正则，那几处相对受控。修法：把 `to` / `body` 也走 `shq()`。
+  `app.js:1711` at-send 用白名单正则，那几处相对受控。**仓库源码已修**：该行改为
+  `shq(dev) + " send " + shq(to) + " " + shq(body)`（构建版本 1.6.1）；
+  但 **v1.6.0 成品 APK 内仍是旧代码**，要用此功能请自行构建 1.6.1，见上节。
 
 **WebView / App**
 
