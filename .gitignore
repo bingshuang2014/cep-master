@@ -1,0 +1,9 @@
+node_modules/
+*.apk
+*.keystore
+*.jks
+server.log
+android/app/build/
+android/app/assets/
+android/app/res/
+*.tar.gz
